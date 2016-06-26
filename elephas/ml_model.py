@@ -16,8 +16,7 @@ from .ml.adapter import df_to_simple_rdd
 from .ml.params import *
 from .optimizers import get
 
-
-class ElephasEstimator(Estimator, HasCategoricalLabels, HasValidationSplit, HasKerasModelConfig, HasFeaturesCol, HasLabelCol, HasMode, HasEpochs, HasBatchSize,
+class ElephasEstimator(Estimator, HasLossConfig, HasCategoricalLabels, HasValidationSplit, HasKerasModelConfig, HasFeaturesCol, HasLabelCol, HasMode, HasEpochs, HasBatchSize,
                        HasFrequency, HasVerbosity, HasNumberOfClasses, HasNumberOfWorkers, HasOptimizerConfig, HasOutputCol):
     '''
     SparkML Estimator implementation of an elephas model. This estimator takes all relevant arguments for model
@@ -26,7 +25,7 @@ class ElephasEstimator(Estimator, HasCategoricalLabels, HasValidationSplit, HasK
     Returns a trained model in form of a SparkML Model, which is also a Transformer.
     '''
     @keyword_only
-    def __init__(self, keras_model_config=None, featuresCol=None, labelCol=None, optimizer_config=None, mode=None,
+    def __init__(self, keras_model_config=None, featuresCol=None, labelCol=None, optimizer_config=None, loss_config=None, mode=None,
                  frequency=None, num_workers=None, nb_epoch=None, batch_size=None, verbose=None, validation_split=None,
                  categorical=None, nb_classes=None, outputCol=None):
         super(ElephasEstimator, self).__init__()
@@ -34,7 +33,7 @@ class ElephasEstimator(Estimator, HasCategoricalLabels, HasValidationSplit, HasK
         self.set_params(**kwargs)
 
     @keyword_only
-    def set_params(self, keras_model_config=None, featuresCol=None, labelCol=None, optimizer_config=None, mode=None,
+    def set_params(self, keras_model_config=None, featuresCol=None, labelCol=None, optimizer_config=None, loss_config=None, mode=None,
                    frequency=None, num_workers=None, nb_epoch=None, batch_size=None, verbose=None,
                    validation_split=None, categorical=None, nb_classes=None, outputCol=None):
         '''
@@ -51,12 +50,16 @@ class ElephasEstimator(Estimator, HasCategoricalLabels, HasValidationSplit, HasK
                                       featuresCol=self.getFeaturesCol(), labelCol=self.getLabelCol())
         simple_rdd = simple_rdd.repartition(self.get_num_workers())
         optimizer = None
+        loss = None
         if self.get_optimizer_config() is not None:
             optimizer = get(self.get_optimizer_config()['name'], self.get_optimizer_config())
+         
+        if self.get_loss_config() is not None:
+            loss = self.get_loss_config()
 
         keras_model = model_from_yaml(self.get_keras_model_config())
 
-        spark_model = SparkModel(simple_rdd.ctx, keras_model, optimizer=optimizer,
+        spark_model = SparkModel(simple_rdd.ctx, keras_model, optimizer=optimizer, loss=loss,
                                  mode=self.get_mode(), frequency=self.get_frequency(),
                                  num_workers=self.get_num_workers())
         spark_model.train(simple_rdd, nb_epoch=self.get_nb_epoch(), batch_size=self.get_batch_size(),

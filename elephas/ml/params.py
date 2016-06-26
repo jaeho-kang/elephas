@@ -19,6 +19,25 @@ class HasKerasModelConfig(Params):
         return self.getOrDefault(self.keras_model_config)
 
 
+class HasLossConfig(Params):
+    '''
+    Parameter minin for Elephas loss config
+    '''
+    def __init__(self):
+        super(HasLossConfig, self).__init__()
+        self.loss_config = Param(self, "loss_config", "Serialzed Elephas loss properties")
+        #import traceback
+        #traceback.print_stack()
+
+    def set_loss_config(self, loss_config):
+        self._paramMap[self.loss_config] = loss_config
+        return self
+
+    def get_loss_config(self):
+        import traceback
+        traceback.print_stack()
+        return self.getOrDefault(self.loss_config)
+
 class HasOptimizerConfig(Params):
     '''
     Parameter mixin for Elephas optimizer config
