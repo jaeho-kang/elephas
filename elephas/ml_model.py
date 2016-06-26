@@ -16,14 +16,15 @@ from .ml.adapter import df_to_simple_rdd
 from .ml.params import *
 from .optimizers import get
 
-class ElephasEstimator(Estimator, HasLossConfig, HasCategoricalLabels, HasValidationSplit, HasKerasModelConfig, HasFeaturesCol, HasLabelCol, HasMode, HasEpochs, HasBatchSize,
-                       HasFrequency, HasVerbosity, HasNumberOfClasses, HasNumberOfWorkers, HasOptimizerConfig, HasOutputCol):
+class ElephasEstimator(Estimator, HasCategoricalLabels, HasValidationSplit, HasKerasModelConfig, HasFeaturesCol, HasLabelCol, HasMode, HasEpochs, HasBatchSize,
+                       HasFrequency, HasVerbosity, HasNumberOfClasses, HasNumberOfWorkers, HasOptimizerConfig, HasOutputCol, HasLossConfig):
     '''
     SparkML Estimator implementation of an elephas model. This estimator takes all relevant arguments for model
     compilation and training.
 
     Returns a trained model in form of a SparkML Model, which is also a Transformer.
     '''
+    #append loss_config for loss peoperties
     @keyword_only
     def __init__(self, keras_model_config=None, featuresCol=None, labelCol=None, optimizer_config=None, loss_config=None, mode=None,
                  frequency=None, num_workers=None, nb_epoch=None, batch_size=None, verbose=None, validation_split=None,
@@ -32,6 +33,7 @@ class ElephasEstimator(Estimator, HasLossConfig, HasCategoricalLabels, HasValida
         kwargs = self.__init__._input_kwargs
         self.set_params(**kwargs)
 
+    #append loss_config for loss peoperties
     @keyword_only
     def set_params(self, keras_model_config=None, featuresCol=None, labelCol=None, optimizer_config=None, loss_config=None, mode=None,
                    frequency=None, num_workers=None, nb_epoch=None, batch_size=None, verbose=None,
@@ -53,12 +55,14 @@ class ElephasEstimator(Estimator, HasLossConfig, HasCategoricalLabels, HasValida
         loss = None
         if self.get_optimizer_config() is not None:
             optimizer = get(self.get_optimizer_config()['name'], self.get_optimizer_config())
-         
+
+        #in this code has exception KeyError: Param(parent='ElephasEstimator_470d82b85b77952bfaa0', name='loss_config', doc='Serialzed Elephas loss properties')
+        # need to solve it
         if self.get_loss_config() is not None:
             loss = self.get_loss_config()
 
         keras_model = model_from_yaml(self.get_keras_model_config())
-
+        #SparkModel class has two more option[loss, optimizer]
         spark_model = SparkModel(simple_rdd.ctx, keras_model, optimizer=optimizer, loss=loss,
                                  mode=self.get_mode(), frequency=self.get_frequency(),
                                  num_workers=self.get_num_workers())

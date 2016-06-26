@@ -17,6 +17,8 @@ from pyspark.mllib.linalg import Matrix, Vector
 
 from keras.models import model_from_yaml
 from keras.engine.training import slice_X
+#this for keras 1.0.4
+#slice_X move to keras.engine.training
 
 from .utils.rwlock import RWLock
 from .utils.functional_utils import subtract_params
@@ -48,6 +50,7 @@ class SparkModel(object):
     SparkModel is the main abstraction of elephas. Every other model
     should inherit from it.
     '''
+    #SparkModel need loss, optimizer params
     def __init__(self, sc, master_network, optimizer=None,loss=None, mode='asynchronous', frequency='epoch',
                  num_workers=4, *args, **kwargs):
         self.spark_context = sc
@@ -227,7 +230,10 @@ class SparkWorker(object):
         y_train = np.asarray([y for x, y in label_iterator])
 
         model = model_from_yaml(self.yaml)
+
+        #in keras 1.0.X keras model need compile,
         model.compile(optimizer=self.optimizer, loss=self.loss)
+
         model.set_weights(self.parameters.value)
         weights_before_training = model.get_weights()
         if x_train.shape[0] > self.train_config.get('batch_size'):
@@ -285,9 +291,14 @@ class AsynchronousSparkWorker(object):
                 if x_train.shape[0] > batch_size:
                     for (batch_start, batch_end) in batches:
                         weights_before_training = get_server_weights(self.master_url)
-                        print(len(weights_before_training))
+
+                        #sometimes weights_before_training ans model.set_weights(params) type not match.
+                        #at first weights_before_training type is scala, but model.set_weights() need numpy array
+                        #and sometimes weight_before_training method does not work well.
+
                         if(len(weights_before_training)>0 ):
                             model.set_weights(weights_before_training)
+
                         batch_ids = index_array[batch_start:batch_end]
                         X = slice_X(x_train, batch_ids)
                         y = slice_X(y_train, batch_ids)

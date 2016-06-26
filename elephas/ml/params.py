@@ -22,12 +22,11 @@ class HasKerasModelConfig(Params):
 class HasLossConfig(Params):
     '''
     Parameter minin for Elephas loss config
+    this class for loss properties
     '''
     def __init__(self):
         super(HasLossConfig, self).__init__()
         self.loss_config = Param(self, "loss_config", "Serialzed Elephas loss properties")
-        #import traceback
-        #traceback.print_stack()
 
     def set_loss_config(self, loss_config):
         self._paramMap[self.loss_config] = loss_config
