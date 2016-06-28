@@ -192,7 +192,7 @@ class SparkModel(object):
         train_config = self.get_train_config(nb_epoch, batch_size,
                                              verbose, validation_split)
         if self.mode in ['asynchronous', 'hogwild']:
-            worker = AsynchronousSparkWorker(yaml, train_config, self.frequency, master_url, optimizer, loss)
+            worker = AsynchronousSparkWorker(yaml=yaml, optimizer=self.optimizer, loss=self.loss, train_config=train_config, frequency=self.frequency, master_url=master_url)
             rdd.mapPartitions(worker.train).collect()
             new_parameters = get_server_weights(master_url)
         elif self.mode == 'synchronous':
@@ -267,6 +267,8 @@ class AsynchronousSparkWorker(object):
         if x_train.size == 0:
             return
         model = model_from_yaml(self.yaml)
+        print(self.optimizer)
+        print(self.loss)
         model.compile(optimizer=self.optimizer,loss=self.loss)
 
         nb_epoch = self.train_config['nb_epoch']
