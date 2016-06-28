@@ -53,12 +53,16 @@ class ElephasEstimator(Estimator, HasCategoricalLabels, HasValidationSplit, HasK
         simple_rdd = simple_rdd.repartition(self.get_num_workers())
         optimizer = None
         loss = None
-        if self.get_optimizer_config() is not None:
+
+        
+        if self.get_optimizer_config() is not None:            
             optimizer = get(self.get_optimizer_config()['name'], self.get_optimizer_config())
 
         #in this code has exception KeyError: Param(parent='ElephasEstimator_470d82b85b77952bfaa0', name='loss_config', doc='Serialzed Elephas loss properties')
-        # need to solve it
+        # need to solve it        
         if self.get_loss_config() is not None:
+            #import keras.objectives
+            #loss = keras.objectives.get(self.get_loss_config()['name'], self.get_loss_config())
             loss = self.get_loss_config()
 
         keras_model = model_from_yaml(self.get_keras_model_config())
