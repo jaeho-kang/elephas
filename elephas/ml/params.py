@@ -27,14 +27,14 @@ class HasLossConfig(Params):
     def __init__(self):
         super(HasLossConfig, self).__init__()
         self.loss_config = Param(self, "loss_config", "Serialzed Elephas loss properties")
+        import keras.objectives
+        self._setDefault(loss_config=keras.objectives.mean_squared_error)
 
     def set_loss_config(self, loss_config):
         self._paramMap[self.loss_config] = loss_config
         return self
 
     def get_loss_config(self):
-        import traceback
-        traceback.print_stack()
         return self.getOrDefault(self.loss_config)
 
 class HasOptimizerConfig(Params):
